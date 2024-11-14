@@ -31,7 +31,7 @@ public class AuthenticationController {
    * Takes user credentials, authenticates the user, and returns a JWT token in the response.
    *
    * @param request the login request containing username and password
-   * @return a ResponseEntity with {@link AuthResponse} containing authentication details and JWT token
+   * @return a ResponseEntity with {@link AuthResponse} containing authentication details
    */
   @PostMapping("/log-in")
   public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthLoginRequest request) {

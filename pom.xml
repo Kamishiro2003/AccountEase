@@ -118,6 +118,26 @@
 
     </dependencies>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.5.0</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>checkstyle</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <build>
         <plugins>
             <!-- Spring Boot Maven Plugin for running the application -->

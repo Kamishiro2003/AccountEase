@@ -21,7 +21,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service for managing user authentication and authorization.
- * Implements {@link UserDetailsService} for loading user details by username and handling login logic.
+ * Implements {@link UserDetailsService} for loading user details by username
+ * and handling login logic.
  */
 @Service
 @RequiredArgsConstructor

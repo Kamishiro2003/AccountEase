@@ -54,11 +54,11 @@ public class GlobalControllerAdvice {
    *
    * @param req the HTTP request where the exception occurred
    * @param ex  the exception containing validation errors
-   * @return a {@link ResponseEntity} with {@link ApiErrorModel} details and an appropriate HTTP status
+   * @return a {@link ResponseEntity} with {@link ApiErrorModel} details
    */
   @ExceptionHandler(value = MethodArgumentNotValidException.class)
-  public ResponseEntity<ApiErrorModel> handlerMethodArgumentNotValidException(HttpServletRequest req,
-      MethodArgumentNotValidException ex
+  public ResponseEntity<ApiErrorModel> handlerMethodArgumentNotValidException(
+      HttpServletRequest req, MethodArgumentNotValidException ex
   ) {
 
     HttpStatus statusCode = ErrorCode.getHttpStatusFromExceptionCode(USER_INVALID_INPUTS.getCode());
@@ -81,13 +81,14 @@ public class GlobalControllerAdvice {
    * @return the error response with internal server error status
    */
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ApiErrorModel> handlerGenericError(HttpServletRequest req, Exception exception
+  public ResponseEntity<ApiErrorModel> handlerGenericError(HttpServletRequest req,
+      Exception exception
   ) {
 
     String path = req.getRequestURI();
 
-    ApiErrorModel
-        apiErrorModel = new ApiErrorModel("E-UNKNOWN-ERROR", exception.getMessage(), path, exception);
+    ApiErrorModel apiErrorModel =
+        new ApiErrorModel("E-UNKNOWN-ERROR", exception.getMessage(), path, exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiErrorModel);
   }
 

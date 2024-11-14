@@ -8,6 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents an authentication login request with validation constraints.
+ * Includes fields for username and password.
+ *
+ * <p>Annotations:
+ * - Lombok annotations for getters, setters, constructors, and a builder pattern.
+ * - Validation constraints for non-blank values and maximum length.
+ */
 @Getter
 @Setter
 @AllArgsConstructor

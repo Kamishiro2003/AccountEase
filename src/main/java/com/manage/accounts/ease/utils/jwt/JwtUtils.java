@@ -89,7 +89,7 @@ public class JwtUtils {
    *
    * @param decodedJwt the decoded JWT from which to retrieve the claim
    * @param claimName  the name of the claim to retrieve
-   * @return the {@link Claim} corresponding to the specified claim name, or an empty claim if not present
+   * @return the {@link Claim} corresponding to the specified claim name
    */
   public Claim getSpecificClaim(DecodedJWT decodedJwt, String claimName) {
 

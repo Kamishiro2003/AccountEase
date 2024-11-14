@@ -6,6 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents an authentication response containing user details and JWT.
+ *
+ * <p>Annotations:
+ * - Lombok annotations for getters, setters, constructors, and builder pattern.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
