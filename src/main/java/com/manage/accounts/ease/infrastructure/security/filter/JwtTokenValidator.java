@@ -1,6 +1,7 @@
 package com.manage.accounts.ease.infrastructure.security.filter;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.manage.accounts.ease.domain.exception.InvalidTokenException;
 import com.manage.accounts.ease.utils.jwt.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * extract user details, and set the security context.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenValidator extends OncePerRequestFilter {
 
   private final JwtUtils jwtUtils;
@@ -45,23 +48,40 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 
     String jwtToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-    if (jwtToken != null) {
+    if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
       String token = jwtToken.substring(7);
 
-      DecodedJWT decodedJwt = jwtUtils.validateToken(token);
+      try {
+        DecodedJWT decodedJwt = jwtUtils.validateToken(token);
+        String username = jwtUtils.extractUsername(decodedJwt);
+        String stringAuthorities = jwtUtils.getSpecificClaim(decodedJwt, "authorities").asString();
 
-      String username = jwtUtils.extractUsername(decodedJwt);
-      String stringAuthorities = jwtUtils.getSpecificClaim(decodedJwt, "authorities").asString();
+        Collection<? extends GrantedAuthority> authorities =
+            AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
 
-      Collection<? extends GrantedAuthority> authorities =
-          AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        Authentication authenticationToken =
+            new UsernamePasswordAuthenticationToken(username, null, authorities);
+        context.setAuthentication(authenticationToken);
+        SecurityContextHolder.setContext(context);
 
-      SecurityContext context = SecurityContextHolder.createEmptyContext();
-      Authentication authenticationToken =
-          new UsernamePasswordAuthenticationToken(username, null, authorities);
-      context.setAuthentication(authenticationToken);
-      SecurityContextHolder.setContext(context);
+      } catch (InvalidTokenException e) {
+        log.warn("Invalid token: {}", e.getMessage());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("""
+                {
+                    "code": "TOKEN-INVALID",
+                    "message": "Token is invalid",
+                    "path": "%s",
+                    "timestamp": "%s"
+                }
+            """.formatted(request.getRequestURI(), java.time.LocalDateTime.now()));
+        return;
+      }
     }
     filterChain.doFilter(request, response);
   }
+
+
 }

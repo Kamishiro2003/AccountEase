@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AuthenticationAdapter {
+
   /**
    * Converts an {@link AuthLoginRequest} to an {@link AuthLoginModel}.
    *
@@ -19,6 +20,7 @@ public class AuthenticationAdapter {
    * @return the domain model for login credentials
    */
   public AuthLoginModel authLoginRequestToDomain(AuthLoginRequest request) {
+
     return AuthLoginModel.builder()
         .username(request.getUsername())
         .password(request.getPassword())
@@ -32,6 +34,7 @@ public class AuthenticationAdapter {
    * @return the API response model with authentication details
    */
   public AuthResponse toResponse(AuthResponseModel response) {
+
     return AuthResponse.builder()
         .username(response.getUsername())
         .message(response.getMessage())
