@@ -1,11 +1,15 @@
 package com.manage.accounts.ease.infrastructure.adapter.in.rest.controller.auth;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manage.accounts.ease.application.usecase.user.UserDetailServiceImpl;
@@ -24,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -55,9 +60,8 @@ class AuthenticationControllerTests {
 
   @BeforeEach
   void setUp() {
-
     mockMvc = MockMvcBuilders.standaloneSetup(authenticationController)
-        .setControllerAdvice(new GlobalControllerAdvice()) // Ensure your exception handler is used
+        .setControllerAdvice(new GlobalControllerAdvice())
         .build();
     objectMapper = new ObjectMapper();
 
@@ -100,4 +104,23 @@ class AuthenticationControllerTests {
     verify(adapter, times(1)).authLoginRequestToDomain(any(AuthLoginRequest.class));
     verify(detailService, times(1)).loginUser(any(AuthLoginModel.class));
   }
+
+  @DisplayName("Login - Missing Username or Password")
+  @Test
+  void login_WhenMissingCredentials_ShouldReturnBadRequest() throws Exception {
+    // Arrange
+    AuthLoginRequest invalidRequest =
+        AuthLoginRequest.builder().username(null).password(null).build();
+    String requestBody = objectMapper.writeValueAsString(invalidRequest);
+
+    // Act & Assert
+    mockMvc.perform(
+            post("/api/v1/auth/log-in").contentType(MediaType.APPLICATION_JSON).content(requestBody))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("USER-INVALID-PARAMETERS"))
+        .andExpect(jsonPath("$.message").value("Invalid user parameters in the request"))
+        .andExpect(jsonPath("$.details", hasItem("Field username cannot be empty or null")))
+        .andExpect(jsonPath("$.details", hasItem("Field password cannot be empty or null")));
+  }
+
 }

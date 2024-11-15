@@ -48,7 +48,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 
     String jwtToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-    if (jwtToken != null) {
+    if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
       String token = jwtToken.substring(7);
 
       try {
@@ -64,12 +64,24 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             new UsernamePasswordAuthenticationToken(username, null, authorities);
         context.setAuthentication(authenticationToken);
         SecurityContextHolder.setContext(context);
+
       } catch (InvalidTokenException e) {
-        // Log and continue the filter chain without setting authentication
         log.warn("Invalid token: {}", e.getMessage());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("""
+                {
+                    "code": "TOKEN-INVALID",
+                    "message": "Token is invalid",
+                    "path": "%s",
+                    "timestamp": "%s"
+                }
+            """.formatted(request.getRequestURI(), java.time.LocalDateTime.now()));
+        return;
       }
     }
     filterChain.doFilter(request, response);
   }
+
 
 }

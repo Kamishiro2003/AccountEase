@@ -54,8 +54,8 @@ public class SecurityConfig {
           http.requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll();
 
           // Private endpoints
-          http.requestMatchers(HttpMethod.POST, "/api/v1/users/**")
-              .hasRole(RoleEnum.ADMIN.toString());
+          http.requestMatchers("/api/v1/users/**").hasRole(RoleEnum.ADMIN.toString());
+
 
           http.anyRequest().denyAll();
         })

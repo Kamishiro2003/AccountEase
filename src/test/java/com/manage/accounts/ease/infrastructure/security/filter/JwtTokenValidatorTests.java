@@ -3,7 +3,10 @@ package com.manage.accounts.ease.infrastructure.security.filter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +20,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +31,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -113,12 +119,15 @@ class JwtTokenValidatorTest {
 
   @DisplayName("doFilterInternal - Invalid JWT Token")
   @Test
-  void doFilterInternal_WithInvalidJwtToken_ShouldNotSetAuthentication()
-      throws ServletException, IOException {
+  void doFilterInternal_WithInvalidJwtToken_ShouldReturnUnauthorized() throws ServletException, IOException {
     // Arrange
-    SecurityContextHolder.clearContext();  // Ensure no previous authentication is present
     String tokenWithoutBearer = "invalid_jwt_token";
 
+    // Mock response writer
+    PrintWriter mockWriter = mock(PrintWriter.class);
+    when(response.getWriter()).thenReturn(mockWriter);
+
+    // Mock request and JWT utility behavior
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + tokenWithoutBearer);
     when(jwtUtils.validateToken(tokenWithoutBearer)).thenThrow(new InvalidTokenException());
 
@@ -126,10 +135,11 @@ class JwtTokenValidatorTest {
     jwtTokenValidator.doFilterInternal(request, response, filterChain);
 
     // Assert
+    verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    verify(mockWriter).write(contains("\"code\": \"TOKEN-INVALID\"")); // Verify response content
     assertNull(SecurityContextHolder.getContext().getAuthentication(),
-        "Security context should not contain an authentication object for invalid token"
-    );
-    verify(filterChain, times(1)).doFilter(request, response);
+        "Security context should not contain an authentication object for invalid token");
+    verify(filterChain, never()).doFilter(request, response);
   }
 
 
