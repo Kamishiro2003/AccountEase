@@ -1,8 +1,12 @@
 package utils;
 
 import com.manage.accounts.ease.domain.model.UserModel;
+import com.manage.accounts.ease.domain.model.auth.AuthLoginModel;
+import com.manage.accounts.ease.domain.model.auth.AuthResponseModel;
+import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.auth.AuthLoginRequest;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.user.UserCreateRequest;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.user.UserUpdateRequest;
+import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.response.auth.AuthResponse;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.response.user.UserResponse;
 import com.manage.accounts.ease.infrastructure.adapter.out.persistence.entity.UserPersistenceEntity;
 import com.manage.accounts.ease.utils.domain.RoleEnum;
@@ -62,6 +66,38 @@ public class UserTestUtil {
         .isEnabled(true)
         .createdAt(LocalDateTime.now(ZoneOffset.UTC))
         .updatedAt(LocalDateTime.now(ZoneOffset.UTC))
+        .build();
+  }
+
+  public static AuthLoginRequest getValidAuthLogin() {
+    return AuthLoginRequest.builder()
+        .username("Kamishiro2003")
+        .password("123423")
+        .build();
+  }
+
+  public static AuthLoginModel getValidAuthLoginModel() {
+    return AuthLoginModel.builder()
+        .username("Kamishiro2003")
+        .password("123423")
+        .build();
+  }
+
+  public static AuthResponse getValidAuthResponse() {
+    return AuthResponse.builder()
+        .username("Kamishiro2003")
+        .message("User logged successfully")
+        .jwt("mock-jwt-token")
+        .status(true)
+        .build();
+  }
+
+  public static AuthResponseModel getValidAuthResponseModel() {
+    return AuthResponseModel.builder()
+        .username("Kamishiro2003")
+        .message("User logged successfully")
+        .jwt("mock-jwt-token")
+        .status(true)
         .build();
   }
 }

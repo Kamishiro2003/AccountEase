@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import utils.UserTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +35,9 @@ class UserCreateUseCaseImplTests {
   @Mock
   private JavaMailSender mailSender;
 
+  @Mock
+  private PasswordEncoder passwordEncoder; // Add PasswordEncoder mock
+
   @InjectMocks
   private UserCreateUseCaseImpl createUseCase;
 
@@ -41,9 +45,13 @@ class UserCreateUseCaseImplTests {
 
   @BeforeEach
   void setUp() {
-
     user = UserTestUtil.getValidUserModel();
+
+    // Mock email sender behavior
     lenient().doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+
+    // Mock password encoding
+    when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedPassword");
   }
 
   @DisplayName("Create user - Valid Data")

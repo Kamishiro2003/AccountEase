@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.manage.accounts.ease.domain.exception.InvalidTokenException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,17 +62,15 @@ public class JwtUtils {
    * @throws JWTVerificationException if the token is invalid or the verification fails
    */
   public DecodedJWT validateToken(String token) {
-
     try {
       Algorithm algorithm = Algorithm.HMAC256(this.privateKey);
-
       JWTVerifier verifier = JWT.require(algorithm).withIssuer(this.userGenerator).build();
-
       return verifier.verify(token);
     } catch (JWTVerificationException exception) {
-      throw new JWTVerificationException("Token invalid, not Authorized");
+      throw new InvalidTokenException();
     }
   }
+
 
   /**
    * Extracts the username (subject) from the provided decoded JWT.

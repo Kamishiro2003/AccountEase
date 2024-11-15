@@ -56,13 +56,13 @@ public class UserDetailServiceImpl implements UserDetailsService {
   /**
    * Authenticates a user and generates an access token.
    *
-   * @param authLoginRequest the login request containing username and password
+   * @param authLoginModel the login model containing username and password
    * @return an {@link AuthResponseModel} with the login status and access token
    */
-  public AuthResponseModel loginUser(AuthLoginModel authLoginRequest) {
+  public AuthResponseModel loginUser(AuthLoginModel authLoginModel) {
 
-    String username = authLoginRequest.getUsername();
-    String password = authLoginRequest.getPassword();
+    String username = authLoginModel.getUsername();
+    String password = authLoginModel.getPassword();
 
     Authentication authentication = this.authenticate(username, password);
     SecurityContextHolder.getContext().setAuthentication(authentication);
