@@ -1,6 +1,7 @@
 package com.manage.accounts.ease.application.port.out;
 
 import com.manage.accounts.ease.domain.model.UserModel;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,15 @@ public interface UserPersistencePort {
    * @return a list of all user
    */
   List<UserModel> findAll();
+
+  /**
+   * Retrieves users created within a specific date range.
+   *
+   * @param startDate the start date of the range (inclusive)
+   * @param endDate   the end date of the range (inclusive)
+   * @return a list of users created within the specified range
+   */
+  List<UserModel> findUsersByDateRange(LocalDate startDate, LocalDate endDate);
 
   /**
    * Saves a new or existing user.

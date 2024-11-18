@@ -3,10 +3,12 @@ package com.manage.accounts.ease.infrastructure.adapter.out.persistence.adapter;
 import com.manage.accounts.ease.application.port.out.UserPersistencePort;
 import com.manage.accounts.ease.domain.model.UserModel;
 import com.manage.accounts.ease.infrastructure.adapter.out.persistence.repository.UserPersistenceRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Adapter for user persistence operations, implementing {@link UserPersistencePort}.
@@ -33,6 +35,15 @@ public class UserPersistenceAdapter implements UserPersistencePort {
   @Override
   public List<UserModel> findAll() {
     return adapter.toUserDomainList(repository.findAll());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @Transactional
+  public List<UserModel> findUsersByDateRange(LocalDate startDate, LocalDate endDate) {
+    return adapter.toUserDomainList(repository.findUsersByDateRange(startDate, endDate));
   }
 
   /**

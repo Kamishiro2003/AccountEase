@@ -2,8 +2,11 @@ package com.manage.accounts.ease.application.usecase.user;
 
 import com.manage.accounts.ease.application.port.in.user.UserRetrieveUseCase;
 import com.manage.accounts.ease.application.port.out.UserPersistencePort;
+import com.manage.accounts.ease.domain.exception.MissingParameterException;
 import com.manage.accounts.ease.domain.exception.UserNotFoundException;
 import com.manage.accounts.ease.domain.model.UserModel;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +25,19 @@ public class UserRetrieveUseCaseImpl implements UserRetrieveUseCase {
   @Override
   public UserModel findByUsername(String username) {
     if (username == null) {
-      throw new IllegalArgumentException();
+      throw new MissingParameterException("username");
     }
     return persistencePort.findByUsername(username).orElseThrow(UserNotFoundException::new);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<UserModel> findUsersByDateRange(LocalDate startDate, LocalDate endDate) {
+    if (startDate == null || endDate == null) {
+      throw new MissingParameterException(List.of("startDate", "endDate"));
+    }
+    return persistencePort.findUsersByDateRange(startDate, endDate);
   }
 }
