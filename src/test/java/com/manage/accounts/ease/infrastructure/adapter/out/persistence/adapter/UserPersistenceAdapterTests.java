@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.manage.accounts.ease.domain.model.UserModel;
 import com.manage.accounts.ease.infrastructure.adapter.out.persistence.entity.UserPersistenceEntity;
 import com.manage.accounts.ease.infrastructure.adapter.out.persistence.repository.UserPersistenceRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,6 +87,30 @@ class UserPersistenceAdapterTests {
     assertEquals(userModels.size(), result.size());
     assertEquals(userModels, result);
   }
+
+  @DisplayName("Find users by date range")
+  @Test
+  void findUsersByDateRange_ShouldReturnListOfUserModels() {
+    // Arrange
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 12, 31);
+
+    List<UserPersistenceEntity> userEntities = List.of(userEntity, userEntity);
+    List<UserModel> userModels = List.of(userModel, userModel);
+
+    when(repository.findUsersByDateRange(startDate, endDate)).thenReturn(userEntities);
+    when(adapter.toUserDomainList(userEntities)).thenReturn(userModels);
+
+    // Act
+    List<UserModel> result = persistenceAdapter.findUsersByDateRange(startDate, endDate);
+
+    // Assert
+    assertEquals(userModels.size(), result.size());
+    assertEquals(userModels, result);
+    verify(repository, times(1)).findUsersByDateRange(startDate, endDate);
+    verify(adapter, times(1)).toUserDomainList(userEntities);
+  }
+
 
   @DisplayName("Save user")
   @Test

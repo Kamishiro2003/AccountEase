@@ -9,6 +9,8 @@ import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.use
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.user.UserUpdateRequest;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.response.user.UserResponse;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -40,14 +43,33 @@ public class UserController {
   private final UserRestAdapter adapter;
 
   /**
-   * Retrieves a user by its username.
+   * Retrieves a user by their username.
    *
-   * @param username the name of the user
-   * @return the user details in a model response
+   * @param username the username of the user to retrieve
+   * @return a {@link ResponseEntity} containing the user's details
    */
   @GetMapping("/{username}")
   public ResponseEntity<UserResponse> findByUsername(@PathVariable("username") String username) {
+
     return new ResponseEntity<>(adapter.toUserResponse(retrieveUseCase.findByUsername(username)),
+        HttpStatus.OK
+    );
+  }
+
+  /**
+   * Retrieves users created within a specified date range.
+   *
+   * @param startDate the start date of the range
+   * @param endDate   the end date of the range
+   * @return a {@link ResponseEntity} containing a list of users' details
+   */
+  @GetMapping
+  public ResponseEntity<List<UserResponse>> findUsersByDateRange(
+      @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate
+  ) {
+
+    return new ResponseEntity<>(
+        adapter.toUserResponseList(retrieveUseCase.findUsersByDateRange(startDate, endDate)),
         HttpStatus.OK
     );
   }
@@ -60,6 +82,7 @@ public class UserController {
    */
   @PostMapping("/")
   public ResponseEntity<UserResponse> saveOne(@Valid @RequestBody UserCreateRequest createRequest) {
+
     return new ResponseEntity<>(adapter.toUserResponse(
         createUseCase.createByOne(adapter.createRequestToAnimeModel(createRequest))),
         HttpStatus.CREATED
@@ -76,6 +99,7 @@ public class UserController {
   public ResponseEntity<Void> updateByUsername(@PathVariable("username") String username,
       @Valid @RequestBody UserUpdateRequest updateRequest
   ) {
+
     updateUseCase.updateByUsername(username, adapter.updateRequestToAnimeModel(updateRequest));
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
@@ -87,6 +111,7 @@ public class UserController {
    */
   @DeleteMapping("/{username}")
   public ResponseEntity<Void> deleteByUsername(@PathVariable("username") String username) {
+
     deleteUseCase.deleteByUsername(username);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }

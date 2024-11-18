@@ -6,8 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,10 +20,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Represents a user with essential account information.
- *
- * <p>This class uses Lombok to automatically generate getters, setters,
- * a full-arguments constructor, and a builder for easy object creation.
+ * Entity representing a user with essential account information.
+ * This class is mapped to the "users" table in the database.
  */
 @Getter
 @Setter
@@ -30,6 +32,16 @@ import lombok.Setter;
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(name = "username_unique_constraint", columnNames = {"username"}),
     @UniqueConstraint(name = "email_unique_constraint", columnNames = {"email"})})
+@NamedStoredProcedureQuery(name = "get_users_by_date_range",
+    procedureName = "get_users_by_date_range", resultClasses = UserPersistenceEntity.class,
+    parameters = {
+      @StoredProcedureParameter(name = "start_date",
+          mode = ParameterMode.IN,
+          type = LocalDate.class),
+      @StoredProcedureParameter(name = "end_date",
+          mode = ParameterMode.IN,
+          type = LocalDate.class)
+    })
 public class UserPersistenceEntity {
 
   /**

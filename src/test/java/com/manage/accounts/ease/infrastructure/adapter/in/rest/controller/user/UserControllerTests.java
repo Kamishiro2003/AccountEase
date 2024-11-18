@@ -16,6 +16,8 @@ import com.manage.accounts.ease.infrastructure.adapter.in.rest.adapter.user.User
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.user.UserCreateRequest;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.request.user.UserUpdateRequest;
 import com.manage.accounts.ease.infrastructure.adapter.in.rest.model.response.user.UserResponse;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,6 +81,29 @@ class UserControllerTests {
     assertEquals(userResponse, response.getBody());
     verify(retrieveUseCase, times(1)).findByUsername(anyString());
   }
+
+  @DisplayName("Find users by date range - Success")
+  @Test
+  void findUsersByDateRange_ShouldReturnUserResponses() {
+    // Arrange
+    LocalDate startDate = LocalDate.of(2023, 1, 1);
+    LocalDate endDate = LocalDate.of(2023, 12, 31);
+    List<UserModel> userModels = List.of(userModel, userModel);
+    List<UserResponse> userResponses = List.of(userResponse, userResponse);
+
+    when(retrieveUseCase.findUsersByDateRange(startDate, endDate)).thenReturn(userModels);
+    when(adapter.toUserResponseList(userModels)).thenReturn(userResponses);
+
+    // Act
+    ResponseEntity<List<UserResponse>> response =
+        userController.findUsersByDateRange(startDate, endDate);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(userResponses, response.getBody());
+    verify(retrieveUseCase, times(1)).findUsersByDateRange(startDate, endDate);
+  }
+
 
   @DisplayName("Create user - Success")
   @Test
