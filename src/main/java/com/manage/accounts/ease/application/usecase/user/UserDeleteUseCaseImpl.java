@@ -3,11 +3,9 @@ package com.manage.accounts.ease.application.usecase.user;
 import com.manage.accounts.ease.application.port.in.user.UserDeleteUseCase;
 import com.manage.accounts.ease.application.port.out.UserPersistencePort;
 import com.manage.accounts.ease.domain.exception.UserNotFoundException;
-import com.manage.accounts.ease.domain.model.UserModel;
+import com.manage.accounts.ease.utils.mails.MailManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,9 +15,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserDeleteUseCaseImpl implements UserDeleteUseCase {
 
+  private static final String NAME_KEY = "DELETE";
+
   private final UserPersistencePort persistencePort;
 
-  private final JavaMailSender mailSender;
+  private final MailManager manager;
 
   /**
    * {@inheritDoc}
@@ -33,31 +33,9 @@ public class UserDeleteUseCaseImpl implements UserDeleteUseCase {
     }
     persistencePort.findByUsername(username).ifPresentOrElse(user -> {
       persistencePort.deleteOne(username);
-      sendAccountDeletionEmail(user);
+      manager.sendAlertMail(username, user.getEmail(), NAME_KEY);
     }, () -> {
       throw new UserNotFoundException();
     });
-  }
-
-  private void sendAccountDeletionEmail(UserModel user) {
-    String subject = "Account Deletion Notice from AccountEase";
-    String emailBody = String.format("""
-        Dear %s,
-        
-        We wanted to let you know that your account with AccountEase has been successfully deleted.
-        If this was a mistake or if you have any questions, please contact our support team.
-        
-        We're here to assist you at any time.
-        
-        Best regards,
-        The AccountEase Team
-        """, user.getUsername());
-
-
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setTo(user.getEmail());
-    message.setSubject(subject);
-    message.setText(emailBody);
-    mailSender.send(message);
   }
 }

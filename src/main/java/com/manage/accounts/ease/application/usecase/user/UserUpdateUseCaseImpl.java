@@ -6,12 +6,11 @@ import com.manage.accounts.ease.domain.exception.EmailAlreadyExistException;
 import com.manage.accounts.ease.domain.exception.UserNotFoundException;
 import com.manage.accounts.ease.domain.exception.UsernameAlreadyExistException;
 import com.manage.accounts.ease.domain.model.UserModel;
+import com.manage.accounts.ease.utils.mails.MailManager;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,9 +20,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserUpdateUseCaseImpl implements UserUpdateUseCase {
 
+  private static final String NAME_KEY = "UPDATE";
+
   private final UserPersistencePort persistencePort;
 
-  private final JavaMailSender mailSender;
+  private final MailManager manager;
 
   /**
    * {@inheritDoc}
@@ -42,7 +43,7 @@ public class UserUpdateUseCaseImpl implements UserUpdateUseCase {
       userToUpdate.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
       try {
         persistencePort.save(userToUpdate);
-        sendAccountUpdatedEmail(user);
+        manager.sendAlertMail(username, user.getEmail(), NAME_KEY);
       } catch (DataIntegrityViolationException e) {
         if (e.getMessage().contains("username_unique_constraint")) {
           throw new UsernameAlreadyExistException();
@@ -54,27 +55,5 @@ public class UserUpdateUseCaseImpl implements UserUpdateUseCase {
     }, () -> {
       throw new UserNotFoundException();
     });
-  }
-
-  private void sendAccountUpdatedEmail(UserModel user) {
-    String subject = "Account Updated Successfully on AccountEase";
-    String emailBody = String.format("""
-        Dear %s,
-        
-        We wanted to inform you that your account details on AccountEase
-        have been successfully updated.
-        If you did not make this change or have any questions,
-        please contact our support team immediately.
-        
-        Thank you for trusting AccountEase to manage your account!
-        
-        Best regards,
-        The AccountEase Team
-        """, user.getUsername());
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setTo(user.getEmail());
-    message.setSubject(subject);
-    message.setText(emailBody);
-    mailSender.send(message);
   }
 }
