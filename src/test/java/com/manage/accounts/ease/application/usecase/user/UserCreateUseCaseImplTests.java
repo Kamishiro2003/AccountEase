@@ -1,6 +1,7 @@
 package com.manage.accounts.ease.application.usecase.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -12,7 +13,7 @@ import com.manage.accounts.ease.application.port.out.UserPersistencePort;
 import com.manage.accounts.ease.domain.exception.EmailAlreadyExistException;
 import com.manage.accounts.ease.domain.exception.UsernameAlreadyExistException;
 import com.manage.accounts.ease.domain.model.UserModel;
-import org.junit.jupiter.api.Assertions;
+import com.manage.accounts.ease.utils.mails.MailManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import utils.UserTestUtil;
 
@@ -33,10 +32,10 @@ class UserCreateUseCaseImplTests {
   private UserPersistencePort persistencePort;
 
   @Mock
-  private JavaMailSender mailSender;
+  private MailManager manager;
 
   @Mock
-  private PasswordEncoder passwordEncoder; // Add PasswordEncoder mock
+  private PasswordEncoder passwordEncoder;
 
   @InjectMocks
   private UserCreateUseCaseImpl createUseCase;
@@ -45,13 +44,14 @@ class UserCreateUseCaseImplTests {
 
   @BeforeEach
   void setUp() {
+
     user = UserTestUtil.getValidUserModel();
-
-    // Mock email sender behavior
-    lenient().doNothing().when(mailSender).send(any(SimpleMailMessage.class));
-
-    // Mock password encoding
-    when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedPassword");
+    lenient().when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedPassword");
+    lenient().doNothing()
+        .when(manager)
+        .sendWelcomeEmail(any(String.class), any(String.class), any(String.class),
+            any(String.class)
+        );
   }
 
   @DisplayName("Create user - Valid Data")
@@ -64,8 +64,12 @@ class UserCreateUseCaseImplTests {
     UserModel userCreated = createUseCase.createByOne(user);
 
     // Assert
-    Assertions.assertNotNull(userCreated);
+    assertNotNull(userCreated);
+    assertEquals(user, userCreated);
     verify(persistencePort, times(1)).save(any(UserModel.class));
+    verify(manager, times(1)).sendWelcomeEmail(user.getUsername(), user.getEmail(),
+        user.getRole().toString(), "CREATE"
+    );
   }
 
   @DisplayName("Create user - Username Unique Constraint Violation")
@@ -78,6 +82,9 @@ class UserCreateUseCaseImplTests {
     // Act & Assert
     assertThrows(UsernameAlreadyExistException.class, () -> createUseCase.createByOne(user));
     verify(persistencePort, times(1)).save(any(UserModel.class));
+    verify(manager, times(0)).sendWelcomeEmail(any(String.class), any(String.class),
+        any(String.class), any(String.class)
+    );
   }
 
   @DisplayName("Create user - Email Unique Constraint Violation")
@@ -90,13 +97,17 @@ class UserCreateUseCaseImplTests {
     // Act & Assert
     assertThrows(EmailAlreadyExistException.class, () -> createUseCase.createByOne(user));
     verify(persistencePort, times(1)).save(any(UserModel.class));
+    verify(manager, times(0)).sendWelcomeEmail(any(String.class), any(String.class),
+        any(String.class), any(String.class)
+    );
   }
 
   @DisplayName("Create user - Other DataIntegrityViolationException")
   @Test
   void createByOne_WhenOtherDataIntegrityViolation_ShouldRethrowOriginalException() {
     // Arrange
-    DataIntegrityViolationException exception = new DataIntegrityViolationException("other_constraint_violation");
+    DataIntegrityViolationException exception =
+        new DataIntegrityViolationException("other_constraint_violation");
     when(persistencePort.save(any(UserModel.class))).thenThrow(exception);
 
     // Act & Assert
@@ -105,5 +116,9 @@ class UserCreateUseCaseImplTests {
 
     // Assert
     assertEquals(exception, thrownException);
+    verify(persistencePort, times(1)).save(any(UserModel.class));
+    verify(manager, times(0)).sendWelcomeEmail(any(String.class), any(String.class),
+        any(String.class), any(String.class)
+    );
   }
 }

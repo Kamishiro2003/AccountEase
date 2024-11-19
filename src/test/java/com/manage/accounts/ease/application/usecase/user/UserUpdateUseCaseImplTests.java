@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import com.manage.accounts.ease.domain.exception.UserNotFoundException;
 import com.manage.accounts.ease.domain.exception.UsernameAlreadyExistException;
 import com.manage.accounts.ease.domain.model.UserModel;
 import com.manage.accounts.ease.utils.domain.RoleEnum;
+import com.manage.accounts.ease.utils.mails.MailManager;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +36,9 @@ class UserUpdateUseCaseImplTests {
 
   @Mock
   private UserPersistencePort persistencePort;
+
+  @Mock
+  private MailManager manager;
 
   @Mock
   private JavaMailSender mailSender;
@@ -60,6 +65,8 @@ class UserUpdateUseCaseImplTests {
     user.setUsername(username);
     user.setRole(RoleEnum.ADMIN);
     when(persistencePort.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+    when(persistencePort.save(user)).thenReturn(user);
+    doNothing().when(manager).sendAlertMail(user.getUsername(), user.getEmail(), "UPDATE");
 
     // Act
     updateUseCaseImpl.updateByUsername(user.getUsername(), user);
@@ -69,7 +76,9 @@ class UserUpdateUseCaseImplTests {
     assertEquals(RoleEnum.ADMIN, user.getRole());
     verify(persistencePort, times(1)).save(user);
     verify(persistencePort, times(1)).findByUsername(user.getUsername());
+    verify(manager, times(1)).sendAlertMail(user.getUsername(), user.getEmail(), "UPDATE");
   }
+
 
   @DisplayName("Update user by username - User Not Found")
   @Test
